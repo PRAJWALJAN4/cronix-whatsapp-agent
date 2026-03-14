@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+*.log
+whatsapp_bot/*.log
+
+# Ngrok
+whatsapp_bot/ngrok
+whatsapp_bot/ngrok-stable-linux-amd64.zip
+
+# Backups
+*_backup_*.py
+app_backup_latest.py
+image_generator_backup_latest.py
+
+# VS Code
+.vscode/
+
+# Project specific
+whatsapp_bot/static/*.png
+!whatsapp_bot/static/placeholder.png

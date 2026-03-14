@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeCloak — Box Assignment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh; margin: 0; padding: 20px;
+            display: flex; align-items: flex-start; justify-content: center;
+        }
+
+        /* Locker grid */
+        .locker-grid { display: grid; gap: 6px; background: #cbd5e1; padding: 10px; border-radius: 12px; border: 2px solid #94a3b8; width: max-content; }
+        .locker-cell { border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; transition: all 0.18s; min-height: 60px; min-width: 60px; border: 1.5px solid rgba(0,0,0,0.08); user-select: none; }
+        .locker-cell:hover { transform: scale(0.94); }
+        .size-s  { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .size-m  { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+        .size-l  { background: #e0f2fe; color: #075985; border-color: #7dd3fc; }
+        .size-xl { background: #f5f3ff; color: #5b21b6; border-color: #c4b5fd; }
+        
+        .status-available { background: linear-gradient(135deg,#bbf7d0,#86efac); color:#14532d; border-color:#4ade80; }
+        .status-occupied  { background: linear-gradient(135deg,#fecaca,#fca5a5); color:#7f1d1d; border-color:#f87171; }
+        .status-opened    { background: linear-gradient(135deg,#fef08a,#fde047); color:#713f12; border-color:#facc15; animation: pulse-open 1.5s infinite; }
+        .live-empty       { background:#f8fafc; color:#cbd5e1; border-color:#e2e8f0; cursor:default; }
+        @keyframes pulse-open { 0%,100%{box-shadow:0 0 0 0 rgba(250,204,21,.6)} 50%{box-shadow:0 0 0 8px rgba(250,204,21,0)} }
+
+        .tool-btn.active { border-color:#0f766e; background:#f0fdfa; box-shadow:0 0 0 2px #99f6e4; }
+        .mode-tab { transition: all 0.2s; }
+        .mode-tab.active-tab { background:#0f766e; color:#fff; box-shadow:0 2px 8px rgba(15,118,110,.4); }
+
+        .scrollbar-hide::-webkit-scrollbar { display:none; }
+        .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+        
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .fade-up { animation: fadeUp 0.3s ease-out forwards; }
+    </style>
+</head>
+<body>
+<div class="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+
+    <!-- Top Bar -->
+    <div class="bg-gradient-to-r from-emerald-900 to-teal-700 text-white px-8 py-5 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">🔐</div>
+            <div>
+                <h1 class="text-xl font-black tracking-tight">SafeCloak Admin</h1>
+                <p class="text-emerald-200 text-xs">Smart Locker Management · India</p>
+            </div>
+        </div>
+        <!-- Mode Tabs -->
+        <div class="flex bg-black/20 p-1 rounded-xl gap-1">
+            <button id="btn-design-mode" onclick="switchMode('design')" class="mode-tab active-tab px-5 py-2 rounded-lg text-sm font-bold">🗺️ Design</button>
+            <button id="btn-live-mode"   onclick="switchMode('live')"   class="mode-tab px-5 py-2 rounded-lg text-sm font-bold text-white/60">🟢 Live View</button>
+        </div>
+    </div>
+
+    <div class="flex h-[calc(100vh-110px)] min-h-[650px]">
+
+        <!-- ===== SIDEBAR ===== -->
+        <div class="w-80 flex-shrink-0 border-r border-stone-100 p-5 overflow-y-auto scrollbar-hide bg-stone-50">
+
+            <!-- Design Sidebar -->
+            <div id="design-sidebar">
+                <p class="text-xs font-black text-stone-400 uppercase tracking-widest mb-3">Select Size Tool</p>
+                <div class="space-y-2 mb-4">
+                    <button onclick="setCurrentTool('s')"  class="tool-btn w-full text-left p-3 rounded-xl border-2 border-transparent hover:bg-white transition-all flex items-center gap-3" data-tool="s">
+                        <div class="w-8 h-8 rounded-lg size-s flex-shrink-0"></div><div><div class="font-bold text-sm">Small — 1×2</div><div class="text-[11px] text-stone-400">Keys, Wallets</div></div>
+                    </button>
+                    <button onclick="setCurrentTool('m')"  class="tool-btn w-full text-left p-3 rounded-xl border-2 border-transparent hover:bg-white transition-all flex items-center gap-3" data-tool="m">
+                        <div class="w-8 h-8 rounded-lg size-m flex-shrink-0"></div><div><div class="font-bold text-sm">Medium — 2×2</div><div class="text-[11px] text-stone-400">Backpacks, Helmets</div></div>
+                    </button>
+                    <button onclick="setCurrentTool('l')"  class="tool-btn w-full text-left p-3 rounded-xl border-2 border-transparent hover:bg-white transition-all flex items-center gap-3" data-tool="l">
+                        <div class="w-8 h-8 rounded-lg size-l flex-shrink-0"></div><div><div class="font-bold text-sm">Large — 2×3</div><div class="text-[11px] text-stone-400">Suitcases</div></div>
+                    </button>
+                    <button onclick="setCurrentTool('xl')" class="tool-btn w-full text-left p-3 rounded-xl border-2 border-transparent hover:bg-white transition-all flex items-center gap-3" data-tool="xl">
+                        <div class="w-8 h-8 rounded-lg size-xl flex-shrink-0"></div><div><div class="font-bold text-sm">XL — 2×4</div><div class="text-[11px] text-stone-400">Trunks, Heavy bags</div></div>
+                    </button>
+                    <button onclick="setCurrentTool('empty')" class="tool-btn w-full text-left p-3 rounded-xl border-2 border-transparent hover:bg-white transition-all flex items-center gap-3" data-tool="empty">
+                        <div class="w-8 h-8 rounded-lg bg-white border border-stone-300 flex items-center justify-center text-stone-300 flex-shrink-0">✕</div><div><div class="font-bold text-sm text-stone-500">Eraser</div></div>
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-stone-200 mb-4">
+                    <span class="text-xs font-bold text-stone-400 uppercase tracking-widest">Shape</span>
+                    <select id="grid-shape" onchange="changeShape(this.value)" class="bg-transparent font-bold text-stone-700 outline-none cursor-pointer text-sm flex-1">
+                        <option value="5x4">5R × 4C</option>
+                        <option value="4x8">4R × 8C</option>
+                        <option value="6x6">6R × 6C</option>
+                        <option value="3x3">3R × 3C</option>
+                        <option value="custom">Custom...</option>
+                    </select>
+                </div>
+
+                <div id="custom-shape-box" class="hidden mb-4 p-3 bg-white border border-stone-200 rounded-xl space-y-2 fade-up">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex-1">
+                            <label class="text-[10px] uppercase font-black text-stone-400 block mb-1">Rows</label>
+                            <input type="number" id="custom-rows" value="5" min="1" max="20" class="w-full bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-sm font-bold">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] uppercase font-black text-stone-400 block mb-1">Cols</label>
+                            <input type="number" id="custom-cols" value="4" min="1" max="20" class="w-full bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 text-sm font-bold">
+                        </div>
+                    </div>
+                    <button onclick="setCustomShape()" class="w-full py-2 bg-stone-800 text-white rounded-lg font-bold text-xs hover:bg-black transition-all">Set Custom Grid</button>
+                </div>
+
+                <button onclick="activateLive()" class="w-full py-3 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 transition-all active:scale-95 shadow-md">✅ Switch to Live View →</button>
+            </div>
+
+            <!-- Live Sidebar -->
+            <div id="live-sidebar" class="hidden">
+                <p class="text-xs font-black text-stone-400 uppercase tracking-widest mb-3">Status Legend</p>
+                <div class="space-y-2 mb-5">
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-100 shadow-sm"><div class="w-8 h-8 rounded-lg status-available flex items-center justify-center">🟢</div><div><div class="font-bold text-sm">Available</div><div class="text-[11px] text-stone-400">Ready to front-desk</div></div></div>
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-100 shadow-sm"><div class="w-8 h-8 rounded-lg status-occupied flex items-center justify-center">🔒</div><div><div class="font-bold text-sm">Occupied</div><div class="text-[11px] text-stone-400">Locked, luggage inside</div></div></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-stone-200 mb-4 space-y-2 text-sm shadow-sm">
+                    <div class="flex justify-between"><span class="text-stone-500 font-medium">🟢 Available</span><span class="font-black text-green-700" id="stat-av">0</span></div>
+                    <div class="flex justify-between"><span class="text-stone-500 font-medium">🔒 Occupied</span><span class="font-black text-red-600" id="stat-oc">0</span></div>
+                    <div class="border-t pt-2 mt-1 flex justify-between"><span class="text-stone-800 font-bold uppercase text-[11px] tracking-wider mt-1">Total Lockers</span><span class="font-black" id="stat-tot">0</span></div>
+                </div>
+
+                <!-- Webhook Remote Unlock Simulation -->
+                <div class="bg-white p-4 rounded-xl border border-stone-200 mb-4 shadow-sm">
+                    <h3 class="font-black text-stone-800 mb-2 text-[10px] uppercase tracking-widest">Remote Unlock Sim</h3>
+                    <p class="text-[11px] text-stone-500 mb-3 leading-snug">Test unlocking a locker via code (simulating a webhook ping from WhatsApp).</p>
+                    <div class="flex gap-2 relative group">
+                        <input type="text" id="unlock-code" placeholder="e.g. M2" class="w-full bg-stone-50 text-sm font-bold px-3 py-2 uppercase rounded-lg outline-none border border-stone-200 focus:border-teal-400 transition-colors">
+                        <button onclick="remoteUnlock()" class="px-4 py-2 bg-teal-600 text-white rounded-lg font-bold text-xs hover:bg-teal-700 transition-colors">Unlock</button>
+                    </div>
+                    <div id="unlock-msg" class="text-[10px] font-bold mt-2 text-teal-600 hidden">Locker unlocked!</div>
+                </div>
+
+                <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 text-[11px] text-teal-800 font-medium mb-4">
+                    💡 Click on any locker in the grid to cycle its live status.
+                </div>
+
+                <!-- Templates Section -->
+                <div class="bg-white p-4 rounded-xl border border-stone-200 mb-4 shadow-sm">
+                    <h3 class="font-black text-stone-800 mb-2 text-[10px] uppercase tracking-widest">Booth Templates</h3>
+                    <select id="template-select" class="w-full bg-stone-50 font-medium text-stone-700 outline-none cursor-pointer text-sm p-2 rounded-lg border border-stone-200 mb-2">
+                    </select>
+                    <div class="flex gap-2">
+                        <button onclick="loadTemplate()" class="flex-1 py-1.5 bg-stone-100 text-stone-600 rounded-lg font-bold text-xs hover:bg-stone-200 border border-stone-200 transition-colors">Load</button>
+                        <button onclick="deleteTemplate()" class="flex-1 py-1.5 bg-red-50 text-red-600 rounded-lg font-bold text-xs hover:bg-red-100 border border-red-200 transition-colors">Delete</button>
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-t border-stone-100 flex flex-col gap-2 relative group">
+                        <input type="text" id="template-name" placeholder="New template name..." class="w-full bg-stone-50 text-sm font-medium px-3 py-2 rounded-lg outline-none border border-stone-200 focus:border-teal-400 transition-colors">
+                        <button onclick="saveTemplate()" class="w-full py-2 bg-stone-800 text-white rounded-lg font-bold text-xs border hover:bg-black transition-colors">Save Current as Template</button>
+                    </div>
+                </div>
+
+
+                <button onclick="switchMode('design')" class="w-full py-3 bg-stone-200 text-stone-700 rounded-xl font-bold text-sm hover:bg-stone-300 transition-all active:scale-95 mt-auto">← Back to Design</button>
+            </div>
+            
+        </div>
+
+        <!-- ===== MAIN PANEL ===== -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-stone-100/50 p-8 relative">
+            <div id="grid-panel" class="flex-1 overflow-auto w-full fade-up">
+                <div id="interactive-grid" class="locker-grid shadow-xl m-auto"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================== STATE ====================
+let currentMode     = 'design';
+let currentDrawTool = 'm';
+let setupData       = { shape: '5x4', gridData: {} };
+let lockerStatus    = {}; // Live statuses
+
+const STATUS_CYCLE = ['available','occupied'];
+const STATUS_LABEL = { available:'AVAILABLE', occupied:'OCCUPIED' };
+const STATUS_ICON  = { available:'🟢', occupied:'🔒' };
+const BLOCK_SHAPE  = { s:[1,2], m:[2,2], l:[2,3], xl:[2,4] };
+const LABEL_MAP    = { s:'SMALL', m:'MEDIUM', l:'LARGE', xl:'EXTRA LARGE' };
+const CODE_PREFIX  = { s:'S', m:'M', l:'L', xl:'XL' };
+
+// Built-in templates initially
+let templates = {};
+
+const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+
+// ==================== TEMPLATES ====================
+async function loadTemplatesFromServer() {
+    try {
+        const res = await fetch(`${API_BASE}/api/templates`);
+        if (res.ok) {
+            templates = await res.json();
+            updateTemplateDropdown();
+        }
+    } catch (e) {
+        console.error('Failed to load templates from server', e);
+    }
+}
+
+function updateTemplateDropdown() {
+    const sel = document.getElementById('template-select');
+    sel.innerHTML = '';
+    const names = Object.keys(templates).sort();
+    
+    if (names.length === 0) {
+        const op = document.createElement('option');
+        op.value = ''; op.text = 'No templates saved';
+        sel.appendChild(op);
+        return;
+    }
+
+    names.forEach(name => {
+        const op = document.createElement('option');
+        op.value = name; op.text = name;
+        sel.appendChild(op);
+    });
+}
+
+async function saveTemplate() {
+    const input = document.getElementById('template-name');
+    const name = input.value.trim();
+    if (!name) return alert('Please enter a name for the template.');
+    
+    const templateData = JSON.parse(JSON.stringify({
+        setupData: setupData,
+        lockerStatus: lockerStatus
+    }));
+
+    try {
+        const res = await fetch(`${API_BASE}/api/templates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, template: templateData })
+        });
+        if (res.ok) {
+            templates[name] = templateData;
+            updateTemplateDropdown();
+            input.value = '';
+            document.getElementById('template-select').value = name;
+        } else {
+            alert('Failed to save template to server.');
+        }
+    } catch (e) {
+        console.error('Error saving template', e);
+        alert('Server unreachable. Running locally?');
+    }
+}
+
+function loadTemplate() {
+    const name = document.getElementById('template-select').value;
+    if (!name || !templates[name]) return;
+    
+    const loadedTemplate = templates[name];
+    
+    // Check if it's the newer format with both setupData and lockerStatus
+    if (loadedTemplate.setupData) {
+        setupData = JSON.parse(JSON.stringify(loadedTemplate.setupData));
+        lockerStatus = loadedTemplate.lockerStatus ? JSON.parse(JSON.stringify(loadedTemplate.lockerStatus)) : {};
+    } else {
+        // Fallback for older format
+        setupData = JSON.parse(JSON.stringify(loadedTemplate));
+        lockerStatus = {};
+    }
+    
+    // Also update shape dropdown if it matches
+    const shapeSelect = document.getElementById('grid-shape');
+    let matched = false;
+    for (let o of shapeSelect.options) {
+        if (o.value === setupData.shape) { o.selected = true; matched = true; break; }
+    }
+    if (!matched) {
+        // dynamic shape add
+        const op = document.createElement('option');
+        op.value = setupData.shape; op.text = setupData.shape.toUpperCase();
+        shapeSelect.appendChild(op);
+        op.selected = true;
+    }
+    
+    renderGrid();
+    if (currentMode === 'live') updateStats(getBlocks());
+}
+
+async function deleteTemplate() {
+    const name = document.getElementById('template-select').value;
+    if (!name || !templates[name]) return;
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
+        try {
+            const res = await fetch(`${API_BASE}/api/templates/${encodeURIComponent(name)}`, { method: 'DELETE' });
+            if (res.ok) {
+                delete templates[name];
+                updateTemplateDropdown();
+            } else {
+                alert('Failed to delete template from server.');
+            }
+        } catch (e) {
+            console.error('Error deleting template', e);
+            alert('Server unreachable.');
+        }
+    }
+}
+
+// ==================== MODE SWITCHING ====================
+function switchMode(mode) {
+    currentMode = mode;
+    ['design','live'].forEach(m => {
+        document.getElementById(`${m}-sidebar`).classList.toggle('hidden', m !== mode);
+        document.getElementById(`btn-${m}-mode`).classList.toggle('active-tab', m === mode);
+        document.getElementById(`btn-${m}-mode`).classList.toggle('text-white/60', m !== mode);
+    });
+    
+    renderGrid();
+    if (mode === 'live') updateStats(getBlocks());
+}
+
+function activateLive() {
+    // Reset missing status to available
+    getBlocks().forEach(b => { if (!lockerStatus[b.blockId]) lockerStatus[b.blockId] = 'available'; });
+    switchMode('live');
+}
+
+// ==================== DRAWING / LOGIC ====================
+function setCurrentTool(size) {
+    currentDrawTool = size;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.tool-btn[data-tool="${size}"]`).classList.add('active');
+}
+
+function placeBlock(startR, startC) {
+    const [rows, cols] = setupData.shape.split('x').map(Number);
+    if (currentDrawTool === 'empty') return;
+    let [rSpan, cSpan] = BLOCK_SHAPE[currentDrawTool];
+    // Rotate 
+    if (startR+rSpan>rows || startC+cSpan>cols) { [rSpan,cSpan]=[cSpan,rSpan]; }
+    // Clamp
+    if (startR+rSpan>rows || startC+cSpan>cols) { rSpan=Math.min(rSpan,rows-startR); cSpan=Math.min(cSpan,cols-startC); }
+    
+    const blockId = `${currentDrawTool}-${Date.now()}`;
+    for (let r=startR; r<startR+rSpan; r++) {
+        for (let c=startC; c<startC+cSpan; c++) {
+            setupData.gridData[`${r}-${c}`] = {size: currentDrawTool, blockId};
+        }
+    }
+    lockerStatus[blockId] = 'available';
+    renderGrid();
+}
+
+function eraseBlock(blockId) {
+    Object.keys(setupData.gridData).forEach(id => { 
+        if (setupData.gridData[id]?.blockId === blockId) delete setupData.gridData[id]; 
+    });
+    delete lockerStatus[blockId];
+    renderGrid();
+}
+
+function cycleStatus(blockId) {
+    const cur = lockerStatus[blockId]||'available';
+    if (cur === 'occupied') {
+        alert("This locker is already occupied by another user! You cannot store luggage here. Please use the Remote Unlock Sim to unlock it.");
+        return;
+    }
+    lockerStatus[blockId] = 'occupied';
+    renderGrid(); 
+    updateStats(getBlocks());
+}
+
+function updateStats(blocks) {
+    let av=0,oc=0;
+    blocks.forEach(b => {
+        const s = lockerStatus[b.blockId]||'available';
+        if(s==='available')av++; else if(s==='occupied')oc++;
+    });
+    const s=(id,v)=>{const e=document.getElementById(id);if(e)e.innerText=v;};
+    s('stat-av',av); s('stat-oc',oc); s('stat-tot',blocks.length);
+}
+
+function remoteUnlock() {
+    const input = document.getElementById('unlock-code');
+    const msg = document.getElementById('unlock-msg');
+    const code = input.value.trim().toUpperCase();
+    if (!code) return;
+
+    const blocks = getBlocks();
+    const target = blocks.find(b => b.displayCode === code);
+    
+    if (target) {
+        lockerStatus[target.blockId] = 'available';
+        renderGrid();
+        msg.innerText = `Locker ${code} unlocked successfully!`;
+        msg.className = "text-[10px] font-bold mt-2 text-teal-600";
+        input.value = '';
+    } else {
+        msg.innerText = `Locker ${code} not found!`;
+        msg.className = "text-[10px] font-bold mt-2 text-red-600";
+    }
+    
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 3000);
+}
+
+function getBlocks() {
+    const gd = setupData.gridData;
+    const [rows, cols] = setupData.shape.split('x').map(Number);
+    const blockMap = {};
+    for (let r=0;r<rows;r++) {
+        for (let c=0;c<cols;c++) {
+            const cell = gd[`${r}-${c}`];
+            if (cell) {
+                if (!blockMap[cell.blockId]) blockMap[cell.blockId]={size:cell.size,blockId:cell.blockId,cells:[],minR:r,maxR:r,minC:c,maxC:c};
+                const b=blockMap[cell.blockId]; 
+                b.cells.push(`${r}-${c}`);
+                b.minR=Math.min(b.minR,r);b.maxR=Math.max(b.maxR,r);
+                b.minC=Math.min(b.minC,c);b.maxC=Math.max(b.maxC,c);
+            }
+        }
+    }
+    const sizeCounts={s:0,m:0,l:0,xl:0};
+    return Object.values(blockMap).sort((a,b)=>a.minR-b.minR||a.minC-b.minC)
+        .map(b=>({...b,displayCode:`${CODE_PREFIX[b.size]}${++sizeCounts[b.size]}`}));
+}
+
+function renderGrid() {
+    const cont = document.getElementById('interactive-grid');
+    cont.innerHTML='';
+    const [rows,cols] = setupData.shape.split('x').map(Number);
+    cont.style.gridTemplateColumns=`repeat(${cols},72px)`;
+    cont.style.gridTemplateRows=`repeat(${rows},72px)`;
+
+    const blocks = getBlocks();
+    const cellToBlock={};
+    blocks.forEach(b=>b.cells.forEach(id=>{cellToBlock[id]=b;}));
+    if (currentMode === 'live') updateStats(blocks);
+
+    const rendered=new Set();
+    for (let r=0;r<rows;r++) {
+        for (let c=0;c<cols;c++) {
+            const id=`${r}-${c}`;
+            const block=cellToBlock[id];
+            
+            if (block && !rendered.has(block.blockId)) {
+                rendered.add(block.blockId);
+                const el=document.createElement('div');
+                el.className='locker-cell';
+                el.style.gridColumn=`${block.minC+1}/${block.maxC+2}`;
+                el.style.gridRow=`${block.minR+1}/${block.maxR+2}`;
+                el.style.borderRadius='10px';
+                
+                if (currentMode==='design') {
+                    el.classList.add(`size-${block.size}`);
+                    el.innerHTML=`
+                        <div class="flex flex-col items-center justify-center w-full h-full select-none">
+                            <div style="font-size:0.55rem;opacity:.65;font-weight:900;letter-spacing:0.05em;">${LABEL_MAP[block.size]}</div>
+                            <div style="font-size:1.3rem;font-weight:900;">${block.displayCode}</div>
+                        </div>`;
+                    el.addEventListener('mousedown',e=>{
+                        e.preventDefault();
+                        if(currentDrawTool==='empty') eraseBlock(block.blockId);
+                        else { eraseBlock(block.blockId); placeBlock(block.minR,block.minC); }
+                    });
+                } else {
+                    const s=lockerStatus[block.blockId]||'available';
+                    el.classList.add(`status-${s}`);
+                    el.innerHTML=`
+                        <div class="flex flex-col items-center justify-center w-full h-full select-none gap-1">
+                            <div style="font-size:1.4rem;">${STATUS_ICON[s]}</div>
+                            <div style="font-size:1rem;font-weight:900;">${block.displayCode}</div>
+                            <div style="font-size:0.55rem;font-weight:800;opacity:.8;letter-spacing:0.04em;text-transform:uppercase;">${STATUS_LABEL[s]}</div>
+                        </div>`;
+                    el.addEventListener('click',()=>cycleStatus(block.blockId));
+                }
+                cont.appendChild(el);
+            } else if (!block && !rendered.has(`cell-${id}`)) {
+                rendered.add(`cell-${id}`);
+                const el=document.createElement('div');
+                el.style.gridColumn=`${c+1}`; 
+                el.style.gridRow=`${r+1}`;
+                
+                if (currentMode==='design') {
+                    el.className='locker-cell text-stone-300 bg-white/50 border border-stone-200/50 hover:bg-stone-50'; 
+                    el.style.fontSize='0.8rem';
+                    el.innerText=`${String.fromCharCode(65+r)}${c+1}`;
+                    el.addEventListener('mousedown',e=>{
+                        e.preventDefault();
+                        if(currentDrawTool!=='empty') placeBlock(r,c);
+                    });
+                } else { 
+                    el.className='locker-cell live-empty'; 
+                    el.style.fontSize='0.75rem'; 
+                    el.innerText=`${String.fromCharCode(65+r)}${c+1}`; 
+                }
+                cont.appendChild(el);
+            }
+        }
+    }
+}
+
+function changeShape(v) { 
+    if (v === 'custom') {
+        document.getElementById('custom-shape-box').classList.remove('hidden');
+        return;
+    }
+    document.getElementById('custom-shape-box').classList.add('hidden');
+    setupData={shape:v,gridData:{}}; 
+    lockerStatus={}; 
+    renderGrid(); 
+}
+
+function setCustomShape() {
+    const r = document.getElementById('custom-rows').value;
+    const c = document.getElementById('custom-cols').value;
+    if (r < 1 || c < 1) return alert('Invalid dimensions');
+    
+    const shape = `${r}x${c}`;
+    setupData={shape: shape, gridData:{}};
+    lockerStatus={};
+    renderGrid();
+    
+    // Optional: Hide box after setting? Or keep it?
+    // Let's keep it but maybe update the dropdown to show we're on custom?
+    // Actually, let's just leave it visible while 'custom' is selected.
+}
+
+// ==================== INIT ====================
+window.onload = async () => { 
+    await loadTemplatesFromServer();
+    // Load default template immediately if it exists
+    if (templates['MG Road, Bangalore']) {
+        document.getElementById('template-select').value = 'MG Road, Bangalore';
+        loadTemplate();
+    } else {
+        const firstTemplate = Object.keys(templates)[0];
+        if (firstTemplate) {
+            document.getElementById('template-select').value = firstTemplate;
+            loadTemplate();
+        }
+    }
+    setCurrentTool('m'); 
+    renderGrid(); 
+};
+</script>
+</body>
+</html>

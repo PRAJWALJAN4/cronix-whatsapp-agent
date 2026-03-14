@@ -1,0 +1,87 @@
+{
+  "setupData": {
+    "shape": "6x3",
+    "gridData": {
+      "0-0": {
+        "size": "xl",
+        "blockId": "xl1"
+      },
+      "0-1": {
+        "size": "xl",
+        "blockId": "xl1"
+      },
+      "1-0": {
+        "size": "xl",
+        "blockId": "xl1"
+      },
+      "1-1": {
+        "size": "xl",
+        "blockId": "xl1"
+      },
+      "0-2": {
+        "size": "m",
+        "blockId": "m1"
+      },
+      "1-2": {
+        "size": "m",
+        "blockId": "m1"
+      },
+      "2-0": {
+        "size": "m",
+        "blockId": "m2"
+      },
+      "3-0": {
+        "size": "m",
+        "blockId": "m2"
+      },
+      "2-1": {
+        "size": "xl",
+        "blockId": "xl2"
+      },
+      "2-2": {
+        "size": "xl",
+        "blockId": "xl2"
+      },
+      "3-1": {
+        "size": "xl",
+        "blockId": "xl2"
+      },
+      "3-2": {
+        "size": "xl",
+        "blockId": "xl2"
+      },
+      "4-0": {
+        "size": "m",
+        "blockId": "m3"
+      },
+      "5-0": {
+        "size": "m",
+        "blockId": "m3"
+      },
+      "4-1": {
+        "size": "m",
+        "blockId": "m4"
+      },
+      "5-1": {
+        "size": "m",
+        "blockId": "m4"
+      },
+      "4-2": {
+        "size": "s",
+        "blockId": "s1"
+      },
+      "5-2": {
+        "size": "s",
+        "blockId": "s2"
+      }
+    }
+  },
+  "lockerStatus": {
+    "xl1": "occupied",
+    "m2": "occupied",
+    "xl2": "occupied",
+    "m4": "occupied",
+    "m1": "occupied",
+    "m3": "occupied"
+  }
+}

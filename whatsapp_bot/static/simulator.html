@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safecloak Bot Simulator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            line-height: 1.4;
+            font-size: 15px;
+            word-wrap: break-word;
+        }
+        .bot {
+            align-self: flex-start;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            color: #333;
+        }
+        .user {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: #fff;
+        }
+        .media {
+            margin-top: 10px;
+            max-width: 100%;
+            border-radius: 5px;
+            display: block;
+        }
+        #input-area {
+            display: flex;
+            padding: 15px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+        }
+        button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        .header {
+            padding: 15px 20px;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        Safecloak Simulator
+        <button style="background:#dc3545; font-size:12px;" onclick="resetChat()">Reset</button>
+    </div>
+    <div id="chat-window"></div>
+    <form id="input-area" onsubmit="handleSend(event)">
+        <input type="text" id="userInput" placeholder="Send 'hi' to start..." autocomplete="off">
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('userInput');
+        const senderId = 'web-user-' + Math.random().toString(36).substr(2, 9);
+
+        function addMessage(text, type, mediaUrl = null) {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            
+            if (mediaUrl) {
+                const img = document.createElement('img');
+                img.src = mediaUrl + '?t=' + Date.now();
+                img.className = 'media';
+                img.style.marginBottom = '10px';
+                div.appendChild(img);
+            }
+            
+            const textSpan = document.createElement('span');
+            textSpan.innerHTML = text.replace(/\n/g, '<br>');
+            div.appendChild(textSpan);
+            
+            chatWindow.appendChild(div);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        async function handleSend(e) {
+            e.preventDefault();
+            const msg = userInput.value.trim();
+            if (!msg) return;
+
+            addMessage(msg, 'user');
+            userInput.value = '';
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sender: senderId, message: msg })
+                });
+                const data = await res.json();
+                addMessage(data.reply, 'bot', data.media);
+            } catch (err) {
+                addMessage("Error connecting to server.", 'bot');
+            }
+        }
+
+        async function resetChat() {
+            chatWindow.innerHTML = '';
+            await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sender: senderId, message: 'reset' })
+            });
+        }
+    </script>
+</body>
+</html>
