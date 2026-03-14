@@ -80,8 +80,7 @@ NGROK_URL=your_ngrok_url
    node server.js
    ```
 
-## 📸 Screenshots
-*(Coming Soon - Add your screenshots here!)*
+
 
 ## 🤝 Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
